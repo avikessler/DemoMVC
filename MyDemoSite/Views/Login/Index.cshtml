@@ -1,0 +1,48 @@
+﻿@model MyDemoSite.Models.SiteLoginRequest
+@{
+  ViewBag.Title = "Log in Page";
+}
+
+@if (!string.IsNullOrWhiteSpace(Model?.message))
+{
+  <div class="panel panel-default">
+    <div class="panel-body">
+      @Model.message
+    </div>
+  </div>
+
+}
+<form class="form-horizontal" method="post">
+  <fieldset>
+
+    <!-- Form Name -->
+    <legend>Login Form</legend>
+
+    <!-- Text input-->
+    <div class="form-group">
+      <label class="col-md-4 control-label" for="Email"></label>
+      <div class="col-md-4">
+        <input id="Email" name="email" type="text" placeholder="Email" class="form-control input-md" required="" value="@(Model?.email)">
+
+      </div>
+    </div>
+
+    <!-- Password input-->
+    <div class="form-group">
+      <label class="col-md-4 control-label" for="passwordinput"></label>
+      <div class="col-md-4">
+        <input id="passwordinput" name="password" type="password" placeholder="Password " class="form-control input-md">
+
+      </div>
+    </div>
+
+    <!-- Button -->
+    <div class="form-group">
+      <label class="col-md-4 control-label" for="LoginBut"></label>
+      <div class="col-md-4">
+        <button id="LoginBut" name="LoginBut" class="btn btn-success">Login</button>
+      </div>
+    </div>
+
+  </fieldset>
+</form>
