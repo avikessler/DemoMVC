@@ -17,7 +17,10 @@ namespace MyDemoSite.Filters
     protected override void HandleUnauthorizedRequest(AuthorizationContext filterContext)
     {
       filterContext.Result = new RedirectToRouteResult(new RouteValueDictionary(
-         new { action = "Index", controller = "Login" }));
+         new { action = "Index", controller = "Login" }));    
+
+      
+
     }
 
   }
