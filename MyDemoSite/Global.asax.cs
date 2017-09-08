@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Orleans;
+using Orleans.Runtime.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -14,15 +16,17 @@ namespace MyDemoSite
     protected void Application_Start()
     {
       AreaRegistration.RegisterAllAreas();
-      GlobalConfiguration.Configure(WebApiConfig.Register);
+      System.Web.Http.GlobalConfiguration.Configure(WebApiConfig.Register);
       FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
       RouteConfig.RegisterRoutes(RouteTable.Routes);
       BundleConfig.RegisterBundles(BundleTable.Bundles);
+      initClientSilo();
     }
 
     private void initClientSilo()
     {
-
+      var clientConfig = ClientConfiguration.LocalhostSilo();
+      GrainClient.Initialize(clientConfig);
     }
   }
 }

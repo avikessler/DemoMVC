@@ -24,16 +24,9 @@ namespace MyDemoSiloHost
 
       Console.WriteLine("Silo started.");
 
-      // Then configure and connect a client.
-      var clientConfig = ClientConfiguration.LocalhostSilo();
 
-      Console.WriteLine("Client connected.");
 
-      GrainClient.Initialize(clientConfig);
-
-      var userBL = GrainClient.GrainFactory.GetGrain<MyDemoSharedGrainInterfaces.IUserGrain>("avi.kessler@gmail.com");
-      userBL.SetUserEmail("avi.kessler@gmail.com").Wait(); ;
-      Console.WriteLine("\n\n{0}\n\n", userBL.Login("1").Result);
+     
 
       //
       // This is the place for your test code.

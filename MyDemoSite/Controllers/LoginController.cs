@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Orleans;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 
@@ -20,15 +22,20 @@ namespace MyDemoSite.Controllers
 
     [HttpPost]
     [ActionName("Index")]
-    public ActionResult IndexPost(Models.SiteLoginResponse res)
+    public async Task<ActionResult> IndexPost(Models.SiteLoginResponse res)
     {
 
-      if (res.email == "avi.kessler@gmail.com" && res.password == "1")
+
+      var userBL = GrainClient.GrainFactory.GetGrain<MyDemoSharedGrainInterfaces.IUserGrain>(res.email);
+      await userBL.SetUserEmail(res.email);
+
+
+      if (await userBL.Login(res.password))
       {
         Response.SetCookie(new HttpCookie("user", res.email));
         return RedirectToAction("Index", "Home");
       }
-      else return View(new Models.SiteLoginRequest { email = res.email, message = "worng user name or password" });
+      else return View(new Models.SiteLoginRequest { email = res.email, message = "wrong user name or password" });
     }
   }
 }
