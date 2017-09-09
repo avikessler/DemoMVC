@@ -14,7 +14,7 @@ namespace MyDemoSharedGrains
     public Task SetUserEmail(string userEmail)
     {
       this.Email = userEmail;
-      return TaskDone.Done;
+      return Task.CompletedTask; ;
     }
 
     public Task<bool> Login(string password)
