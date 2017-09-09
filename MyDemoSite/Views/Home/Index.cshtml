@@ -2,30 +2,152 @@
   ViewBag.Title = "Home Page";
 }
 
-<div class="jumbotron">
-  <button value="Start a new Race" class="btn btn-success "></button>
- 
-</div>
+<form class="form-horizontal">
+  <fieldset>
+
+
+    <!-- change col-sm-N to reflect how you would like your column spacing (http://getbootstrap.com/css/#forms-control-sizes) -->
+    <!-- Form Name -->
+    <legend>Car Racer</legend>
+
+    <!-- Spinbox http://getfuelux.com/javascript.html#spinbox -->
+    <div class="form-group">
+      <label for="numOfCars" class="control-label col-sm-4"># Of Cars</label>
+      <div class="col-sm-8">
+        <div class="spinbox" data-initialize="spinbox" id="numOfCars">
+          <input id="numOfCarsInput" type="text" class="form-control input-mini spinbox-input" value="4">
+
+        </div>
+
+      </div>
+    </div>
+    <!-- Spinbox http://getfuelux.com/javascript.html#spinbox -->
+    <div class="form-group">
+      <label for="raceKM" class="control-label col-sm-4">runway length (km)</label>
+      <div class="col-sm-8">
+        <div class="spinbox" data-initialize="spinbox" id="raceKM">
+          <input id="raceKMInput" type="text" class="form-control input-mini spinbox-input" value="10">
+
+        </div>
+
+      </div>
+    </div>
+    <!-- Button http://getbootstrap.com/css/#buttons -->
+    <div class="form-group">
+      <label class="control-label col-sm-4" for="butStart"></label>
+      <div class="text-right col-sm-8">
+        <button type="button" id="butStart" name="butStart" class="btn btn-success" aria-label="">Start</button>
+
+      </div>
+    </div>
+
+
+  </fieldset>
+</form>
+
 
 <div class="row">
   <div class="col-md-12">
-  
-    <table class="table-bordered table-condensed"  >
+    <table class="table table-bordered table-condensed table-hover">
       <thead>
         <tr>
-          Car Name
-        </tr>
-        <tr>
-          Car KM
+          <th>  #</th>
+          <th>  Car Name</th>
+          <th>  Car KM</th>
         </tr>
       </thead>
-      <tbody id="RaceDetails" >
-
-      </tbody>
-
+      <tbody id="RaceDetails"></tbody>
     </table>
-
-
-
   </div>
 </div>
+
+@section scripts
+{
+  <script>
+    $(function () {
+
+      var raceId = null;
+      var cars = [];
+      var statusIntervalId;
+      var driveIntervalId;
+      $('#butStart').click(function (e) {
+
+        $.ajax({
+          method: 'POST',
+          url: '/api/RaceAPI/StartNewRace?name=' + encodeURIComponent('The best race in the world') + '&KM=' + $('#raceKMInput').val()
+        }).done(function (data) {
+          raceId = data;
+          return addCars($('#numOfCarsInput').val());
+        }).done(function (data) {
+
+          driveIntervalId =setInterval(driveCars, 300);
+           statusIntervalId = setInterval(updateStatus, 300);
+
+        });
+      });
+
+      function driveCars() {
+
+        for (var i = 0; i < cars.length; i++) {
+          var speed = Math.random() * 200 + 1;
+
+          $.ajax({
+            method: 'POST',
+            url: '/api/RaceAPI/ReportCarSpeed?carId=' + cars[i].carId + '&speed=' + speed
+          });
+        }
+      }
+
+      function updateStatus() {
+        $.ajax({
+          method: 'POST',
+          url: '/api/RaceAPI/RaceStatus?raceId=' + raceId
+
+        }).done(function (data) {
+          var tdata = $('#RaceDetails');
+
+          tdata.empty();
+          for (var j = 0; j < data.carStatuses.length; j++) {
+
+            for (var i = 0; i < cars.length; i++) {
+              if (cars[i].carId === data.carStatuses[j].Key) {
+                cars[i].carKM = data.carStatuses[j].Value;
+                tdata.append('<tr class="' + (cars[i].carKM == $('#raceKMInput').val() ? 'success' : '') + '"><td>' + (j + 1) + '</td><td>' + cars[i].carName + '</td><td>' + cars[i].carKM + '</td></tr>');
+                break;
+              }
+            }
+          }
+
+          if (!data.raceActive) {
+            clearInterval(statusIntervalId);
+            clearInterval(driveIntervalId);
+          } 
+        });
+      }
+
+
+      function addCars(count) {
+
+        if (count <= 0) return;
+
+        var carName = 'Car Num : ' + Math.floor((Math.random() * 100) + 1);
+        return $.ajax({
+          method: 'POST',
+          url: '/api/RaceAPI/AddCarToRace?carName=' + encodeURIComponent(carName) + '&raceId=' + raceId
+
+        }).done(function (data) {
+
+          cars.push({
+            carId: data,
+            carName: carName,
+            carKM: 0
+          });
+          addCars(count - 1);
+        });
+      };
+    });
+
+  </script>
+
+
+}

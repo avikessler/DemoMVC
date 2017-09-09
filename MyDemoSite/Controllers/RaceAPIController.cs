@@ -12,7 +12,9 @@ namespace MyDemoSite.Controllers
   public class RaceAPIController : ApiController
   {
 
-    public async Task<long> StartNewRace(string name, double KM)
+
+
+    public async Task<long> StartNewRace([FromUri] string name, [FromUri] double KM)
     {
       Random rand = new Random(DateTime.Now.Millisecond);
       long raceId = rand.Next();
@@ -45,17 +47,21 @@ namespace MyDemoSite.Controllers
 
 
 
-    public async Task<Object> GetRaceStatus(long raceId)
+    public async Task<Object> RaceStatus(long raceId)
     {
 
       var race = GrainClient.GrainFactory.GetGrain<MyDemoSharedGrainInterfaces.IRaceGrain>(raceId);
 
-      return new
+      bool active = await race.IsRaceActive();
+      var carStatuses = await race.GetCarsStatus();
+      var result = new
       {
-        raceActive = await race.IsRaceActive(),
-        ReportCarSpeed = await race.GetCarsStatus()
+        raceActive = active,
+        carStatuses = carStatuses
 
       };
+
+      return result;
     }
 
   }

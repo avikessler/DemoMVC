@@ -17,7 +17,8 @@ namespace MyDemoSharedGrains
     public Task<IEnumerable<KeyValuePair<long, double>>> GetCarsStatus()
     {
       return Task.FromResult<IEnumerable <KeyValuePair<long, double>>>(
-        cars.OrderByDescending(c => c.Value.CarKMPassed).Select(c => new KeyValuePair<long, double>(c.Value.CarId, c.Value.CarKMPassed))
+        cars.OrderByDescending(c => c.Value.CarKMPassed).ThenBy(c => c.Value.CarLastKMReported)
+        .Select(c => new KeyValuePair<long, double>(c.Value.CarId, c.Value.CarKMPassed)).ToArray()
         );
     }
 
@@ -34,7 +35,7 @@ namespace MyDemoSharedGrains
       if (!cars.Any()) throw new InvalidOperationException("Race don't have cars");
 
       return Task.FromResult<bool>(
-        cars.Values.Select(c => c.CarKMPassed).Min() <= TotalRaceKM
+        cars.Values.Select(c => c.CarKMPassed).Min() < TotalRaceKM
         );
     }
 
@@ -52,6 +53,7 @@ namespace MyDemoSharedGrains
 
     public Task<bool> reportCarKMPassed(long carId, double KM)
     {
+
       if (TotalRaceKM > KM)
       {
         cars[carId].CarLastKMReported = DateTime.Now;
@@ -59,6 +61,7 @@ namespace MyDemoSharedGrains
         return Task.FromResult<bool>(true);
       }else
       {
+        cars[carId].CarKMPassed = TotalRaceKM;
         return Task.FromResult<bool>(false);
       }
      
