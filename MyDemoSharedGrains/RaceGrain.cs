@@ -52,10 +52,16 @@ namespace MyDemoSharedGrains
 
     public Task<bool> reportCarKMPassed(long carId, double KM)
     {
-      cars[carId].CarLastKMReported = DateTime.Now;
-      cars[carId].CarKMPassed = KM;
-
-      return Task.FromResult<bool>(TotalRaceKM < KM);
+      if (TotalRaceKM > KM)
+      {
+        cars[carId].CarLastKMReported = DateTime.Now;
+        cars[carId].CarKMPassed = KM;
+        return Task.FromResult<bool>(true);
+      }else
+      {
+        return Task.FromResult<bool>(false);
+      }
+     
 
     }
   }

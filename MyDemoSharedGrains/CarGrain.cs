@@ -32,7 +32,7 @@ namespace MyDemoSharedGrains
       }
     }
 
-    public async Task AttendInRace(int raceId)
+    public async Task AttendInRace(long raceId)
     {
       attendraceID = raceId;
       await race.joinCarToRace(this.carId);
