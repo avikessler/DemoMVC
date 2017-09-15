@@ -14,9 +14,18 @@ namespace MyDemoSharedGrains
     internal string RaceName { get; set; }
     internal double TotalRaceKM { get; set; }
 
+    TimeProvider _time = new TimeProvider();
+    public virtual TimeProvider Time
+    {
+      get
+      {
+        return _time;
+      }
+    }
+
     public Task<IEnumerable<KeyValuePair<long, double>>> GetCarsStatus()
     {
-      return Task.FromResult<IEnumerable <KeyValuePair<long, double>>>(
+      return Task.FromResult<IEnumerable<KeyValuePair<long, double>>>(
         cars.OrderByDescending(c => c.Value.CarKMPassed).ThenBy(c => c.Value.CarLastKMReported)
         .Select(c => new KeyValuePair<long, double>(c.Value.CarId, c.Value.CarKMPassed)).ToArray()
         );
@@ -45,7 +54,7 @@ namespace MyDemoSharedGrains
       {
         CarId = carId,
         CarKMPassed = 0,
-        CarLastKMReported = DateTime.Now
+        CarLastKMReported = Time.Now
       });
 
       return Task.CompletedTask;
@@ -59,12 +68,13 @@ namespace MyDemoSharedGrains
         cars[carId].CarLastKMReported = DateTime.Now;
         cars[carId].CarKMPassed = KM;
         return Task.FromResult<bool>(true);
-      }else
+      }
+      else
       {
         cars[carId].CarKMPassed = TotalRaceKM;
         return Task.FromResult<bool>(false);
       }
-     
+
 
     }
   }

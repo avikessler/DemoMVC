@@ -15,6 +15,15 @@ namespace MyDemoSharedGrains
     internal double KMPassd { get; set; }
     internal string Name { get; set; }
     internal long? attendraceID { get; set; }
+    TimeProvider _time = new TimeProvider();
+    public virtual TimeProvider Time
+    {
+      get
+      {
+        return _time;
+      }
+    }
+
     public virtual long carId
     {
       get
@@ -58,12 +67,12 @@ namespace MyDemoSharedGrains
     {
       if (LastTimeSpeedReported.HasValue)
       { // only if the car have started all ready
-        KMPassd += DateTime.Now.Subtract(LastTimeSpeedReported.Value).TotalHours * ((CurrentSpeed + speed) / 2);
+        KMPassd += Time.Now.Subtract(LastTimeSpeedReported.Value).TotalHours * ((CurrentSpeed + speed) / 2);
       }
 
       // set values
       CurrentSpeed = speed;
-      LastTimeSpeedReported = DateTime.Now;
+      LastTimeSpeedReported = Time.Now;
 
 
       if (attendraceID.HasValue)

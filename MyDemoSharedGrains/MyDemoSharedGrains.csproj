@@ -47,6 +47,7 @@
   <ItemGroup>
     <Compile Include="RaceGrain.cs" />
     <Compile Include="CarGrain.cs" />
+    <Compile Include="TimeProvider.cs" />
     <Compile Include="UserGrain.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
