@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Threading.Tasks;
 
 namespace MyDemoUnitTesting
 {
@@ -7,20 +8,20 @@ namespace MyDemoUnitTesting
   public class UserGrianTests
   {
     [TestMethod]
-    public void LoginSeccessTest()
+    public async Task LoginSeccessTest()
     {
       var userBL = new MyDemoSharedGrains.UserGrain();
-      userBL.SetUserEmail("avi.kessler@gmail.com");
-      Assert.IsTrue(userBL.Login("1").Result);
+      await userBL.SetUserEmail("avi.kessler@gmail.com");
+      Assert.IsTrue(await userBL.Login("1"));
 
     }
 
     [TestMethod]
-    public void LoginFailedTest()
+    public async Task LoginFailedTest()
     {
       var userBL = new MyDemoSharedGrains.UserGrain();
-      userBL.SetUserEmail("avi.kessler@gmail.com");
-      Assert.IsFalse(userBL.Login("2").Result);
+      await  userBL.SetUserEmail("avi.kessler@gmail.com");
+      Assert.IsFalse(await userBL.Login("2"));
 
     }
 

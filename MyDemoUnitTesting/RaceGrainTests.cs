@@ -3,27 +3,29 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MyDemoSharedGrains;
 using Moq;
 using System.Linq;
+using System.Threading.Tasks;
+
 namespace MyDemoUnitTesting
 {
   [TestClass]
   public class RaceGrainTests
   {
     [TestMethod]
-    public void RaceTest()
+    public async Task RaceTest()
     {
 
       Mock<CarGrain> car1 = new Moq.Mock<CarGrain>(Moq.MockBehavior.Loose);
       car1.SetupGet(c => c.carId).Returns(1);
-      car1.Object.Init("speedy gonzales").Wait();
+      await car1.Object.Init("speedy gonzales");
 
 
       Mock<CarGrain> car2 = new Moq.Mock<CarGrain>(Moq.MockBehavior.Loose);
       car2.SetupGet(c => c.carId).Returns(2);
-      car2.Object.Init("Bimba").Wait();
+      await car2.Object.Init("Bimba");
 
       Mock<CarGrain> car3 = new Moq.Mock<CarGrain>(Moq.MockBehavior.Loose);
       car3.SetupGet(c => c.carId).Returns(3);
-      car3.Object.Init("speed racer").Wait();
+      await car3.Object.Init("speed racer");
 
 
       RaceGrain race = new RaceGrain();
@@ -34,49 +36,49 @@ namespace MyDemoUnitTesting
 
 
 
-      car1.Object.AttendInRace(0);
-      car2.Object.AttendInRace(0);
-      car3.Object.AttendInRace(0);
+      await car1.Object.AttendInRace(0);
+      await car2.Object.AttendInRace(0);
+      await car3.Object.AttendInRace(0);
 
-      car1.Object.SetSpeed(300);
-      car2.Object.SetSpeed(200);
-      car3.Object.SetSpeed(100);
+      await car1.Object.SetSpeed(300);
+      await car2.Object.SetSpeed(200);
+      await car3.Object.SetSpeed(100);
 
-      System.Threading.Thread.Sleep(1000);
+      await Task.Delay(1000);
 
-      car1.Object.SetSpeed(300);
-      car2.Object.SetSpeed(400);
-      car3.Object.SetSpeed(200);
-      Assert.IsTrue(race.IsRaceActive().Result, "check if the race is still active");
-      System.Threading.Thread.Sleep(1000);
+      await car1.Object.SetSpeed(300);
+      await car2.Object.SetSpeed(400);
+      await car3.Object.SetSpeed(200);
+      Assert.IsTrue(await race.IsRaceActive(), "check if the race is still active");
+      await Task.Delay(1000);
 
-      car1.Object.SetSpeed(400);
-      car2.Object.SetSpeed(400);
-      car3.Object.SetSpeed(200);
-      Assert.IsTrue(race.IsRaceActive().Result, "check if the race is still active");
-      System.Threading.Thread.Sleep(1000);
+      await car1.Object.SetSpeed(400);
+      await car2.Object.SetSpeed(400);
+      await car3.Object.SetSpeed(200);
+      Assert.IsTrue(await race.IsRaceActive(), "check if the race is still active");
+      await Task.Delay(1000);
 
-      car1.Object.SetSpeed(800);
-      car2.Object.SetSpeed(100);
-      car3.Object.SetSpeed(200);
-      Assert.IsTrue(race.IsRaceActive().Result, "check if the race is still active");
-      System.Threading.Thread.Sleep(1000);
+      await car1.Object.SetSpeed(800);
+      await car2.Object.SetSpeed(100);
+      await car3.Object.SetSpeed(200);
+      Assert.IsTrue(await race.IsRaceActive(), "check if the race is still active");
+      await Task.Delay(1000);
 
-      car1.Object.SetSpeed(600);
-      car2.Object.SetSpeed(400);
-      car3.Object.SetSpeed(500);
+      await car1.Object.SetSpeed(600);
+      await car2.Object.SetSpeed(400);
+      await car3.Object.SetSpeed(500);
 
-      Assert.IsTrue(race.IsRaceActive().Result, "check if the race is still active");
+      Assert.IsTrue(await race.IsRaceActive(), "check if the race is still active");
 
-      System.Threading.Thread.Sleep(1000);
+      await Task.Delay(1000);
 
-      car1.Object.SetSpeed(800);
-      car2.Object.SetSpeed(400);
-      car3.Object.SetSpeed(400);
+      await car1.Object.SetSpeed(800);
+      await car2.Object.SetSpeed(400);
+      await car3.Object.SetSpeed(400);
 
-      Assert.IsFalse(race.IsRaceActive().Result, "check if the race is not active");
+      Assert.IsFalse(await race.IsRaceActive(), "check if the race is not active");
 
-      Assert.AreEqual <long>(race.GetCarsStatus().Result.ElementAt(0).Key, 1,"the first car should win");
+      Assert.AreEqual<long>((await race.GetCarsStatus()).ElementAt(0).Key, 1, "the first car should win");
 
 
 
