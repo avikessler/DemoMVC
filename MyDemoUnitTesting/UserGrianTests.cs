@@ -1,7 +1,8 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
-
+using Moq;
+using MyDemoSharedGrains;
 namespace MyDemoUnitTesting
 {
   [TestClass]
@@ -10,20 +11,30 @@ namespace MyDemoUnitTesting
     [TestMethod]
     public async Task LoginSeccessTest()
     {
-      var userBL = new MyDemoSharedGrains.UserGrain();
-      await userBL.SetUserEmail("avi.kessler@gmail.com");
-      Assert.IsTrue(await userBL.Login("1"));
+      Mock<UserGrain> user = new Moq.Mock<UserGrain>(Moq.MockBehavior.Loose);
+      user.SetupGet( u => u.Email).Returns("avi.kessler@gmail.com");
+      Assert.IsTrue(await user.Object.Login("1"));
 
     }
 
     [TestMethod]
     public async Task LoginFailedTest()
     {
-      var userBL = new MyDemoSharedGrains.UserGrain();
-      await  userBL.SetUserEmail("avi.kessler@gmail.com");
-      Assert.IsFalse(await userBL.Login("2"));
+      Mock<UserGrain> user = new Moq.Mock<UserGrain>(Moq.MockBehavior.Loose);
+      user.SetupGet(u => u.Email).Returns("avi.kessler@gmail.com");
+      Assert.IsFalse(await user.Object.Login("2"));
 
     }
+
+    [TestMethod]
+    public async Task RegisterTest()
+    {
+      Mock<UserGrain> user = new Moq.Mock<UserGrain>(Moq.MockBehavior.Loose);
+      user.SetupGet(u => u.Email).Returns("avi.kessler@gmail.com");
+      Assert.IsTrue(await user.Object.Register("1"));
+
+    }
+
 
   }
 }

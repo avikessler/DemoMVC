@@ -9,7 +9,7 @@ namespace MyDemoSharedGrainInterfaces
   public interface IUserGrain : IGrainWithStringKey
   {
    
-    Task SetUserEmail(string email);
+
     Task<bool> Login( string password);
 
 

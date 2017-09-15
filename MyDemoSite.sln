@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.12
+VisualStudioVersion = 15.0.26730.15
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyDemoSite", "MyDemoSite\MyDemoSite.csproj", "{A0176344-A76B-4773-9E42-76E74F6B3C6F}"
 EndProject
@@ -12,6 +12,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyDemoSharedGrains", "MyDemoSharedGrains\MyDemoSharedGrains.csproj", "{5C2389BE-0A90-41C1-A4B6-24A6BCA1EF20}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyDemoUnitTesting", "MyDemoUnitTesting\MyDemoUnitTesting.csproj", "{D646BEF7-3DDD-42BC-BC31-0F4FC7682D64}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3DParty", "3DParty", "{29D1AAD8-359E-4405-9D00-786C36E4DDCE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,6 +26,7 @@ Global
 		{A0176344-A76B-4773-9E42-76E74F6B3C6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0176344-A76B-4773-9E42-76E74F6B3C6F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FB2191C3-3E6E-4AD0-B078-CB0A4F714097}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB2191C3-3E6E-4AD0-B078-CB0A4F714097}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FB2191C3-3E6E-4AD0-B078-CB0A4F714097}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FB2191C3-3E6E-4AD0-B078-CB0A4F714097}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C6B8EFE3-6F85-42C0-A0D0-2E6FDA37C43E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU

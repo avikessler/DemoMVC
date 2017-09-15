@@ -19,16 +19,30 @@ namespace MyDemoSite.Controllers
     }
 
 
+    [HttpGet]
+    public ActionResult Welcome()
+    {
+
+
+   //TODO not working as the gigya account is disabled :(
+
+      return View();
+
+
+
+    }
+
+
+
+
 
     [HttpPost]
     [ActionName("Index")]
     public async Task<ActionResult> IndexPost(Models.SiteLoginResponse res)
     {
-
-
+      
       var userBL = GrainClient.GrainFactory.GetGrain<MyDemoSharedGrainInterfaces.IUserGrain>(res.email);
-      await userBL.SetUserEmail(res.email);
-
+    
 
       if (await userBL.Login(res.password))
       {
@@ -37,5 +51,6 @@ namespace MyDemoSite.Controllers
       }
       else return View(new Models.SiteLoginRequest { email = res.email, message = "wrong user name or password" });
     }
+
   }
 }

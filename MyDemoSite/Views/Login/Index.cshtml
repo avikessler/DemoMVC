@@ -45,4 +45,46 @@
     </div>
 
   </fieldset>
+
+
 </form>
+<div id="runningCodeExample" style="border: 1px solid skyblue; padding: 15px; width: 300px;">
+  <a href="#" onclick="gigya.accounts.showScreenSet({screenSet:'NewRaas4nov15-RegistrationLogin' ,  redirectURL:'/Login/Welcome'});">Login</a>&nbsp;&nbsp;|&nbsp;&nbsp;
+  <a href="#" onclick="gigya.accounts.showScreenSet({screenSet:'NewRaas4nov15-RegistrationLogin', startScreen:'gigya-register-screen'} );">Register</a>
+  </br></br></br>
+  <a href="#" onclick="gigya.accounts.showScreenSet({screenSet:'NewRaas4nov15-ProfileUpdate'});">Edit Your Profile</a>
+  </br></br></br>
+  <a href="#" onclick="gigya.accounts.logout({callback:onLogout});">Logout</a>
+
+
+  @section Scripts{
+    <!-- gigya.js script should only be included once -->                                         
+    <SCRIPT type="text/javascript" lang="javascript" src="http://cdn.gigya.com/js/gigya.js?apikey=3_mK2cmEzLkzhqe4MUrtPncxbv4wKsYAhsew0iVwhVUls3c_Jx_HLX434jAVpq5M_W"></SCRIPT>
+
+
+
+  <script>
+    function onLogin(response) {
+      if (response.errorCode == 0) {
+        alert('You are now logged in');
+      }
+      else {
+        alert('Error :' + response.errorMessage);
+      }
+    }
+
+      function onLogout(response) {
+        if (response.errorCode == 0) {
+          alert('You are now logged out');
+        }
+        else {
+          alert('Error :' + response.errorMessage);
+        }
+      }
+  </script>
+
+
+
+
+
+  }

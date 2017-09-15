@@ -23,10 +23,23 @@ namespace MyDemoSite
       initClientSilo();
     }
 
-    private void initClientSilo()
+    private void initClientSilo(int reccount = 10)
     {
-      var clientConfig = ClientConfiguration.LocalhostSilo();
-      GrainClient.Initialize(clientConfig);
+      try
+      {
+        var clientConfig = ClientConfiguration.LocalhostSilo();
+        GrainClient.Initialize(clientConfig);
+      }
+      catch (Exception ex)
+      {
+        if (reccount > 0)
+        {
+          System.Threading.Thread.Sleep(1000);
+          initClientSilo(reccount - 1);
+        }
+        else throw;
+      }
+
     }
   }
 }
