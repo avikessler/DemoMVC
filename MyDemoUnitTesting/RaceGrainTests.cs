@@ -98,13 +98,6 @@ namespace MyDemoUnitTesting
       Assert.AreEqual<long>((await race.Object.GetCarsStatus()).ElementAt(0).Key, 1, "the first car should win");
 
 
-
-      /// should be driving for 1 sec (plus minus) in an average speed of 125MK meaning the car should pass (1 / 60 / 60) * 125) = ~ 0.0347222222222222
-      // Assert.IsTrue(car1.GetKMPassed().Result > 0.03 && car.GetKMPassed().Result < 0.04);
-
-
-
-
     }
 
 
