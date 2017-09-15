@@ -5,16 +5,25 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MyDemoSharedGrainInterfaces;
+using Orleans.Providers;
+
 namespace MyDemoSharedGrains
 {
-  public class CarGrain : Grain, ICarGrain
+
+  public class CarState
+  {
+    public double CurrentSpeed { get; set; }
+    public DateTime? LastTimeSpeedReported { get; set; }
+    public double KMPassd { get; set; }
+    public string Name { get; set; }
+    public long? attendraceID { get; set; }
+  }
+
+  [StorageProvider(ProviderName = "MongoStore")]
+  public class CarGrain : Grain<CarState>, ICarGrain
   {
 
-    internal double CurrentSpeed { get; set; }
-    internal DateTime? LastTimeSpeedReported { get; set; }
-    internal double KMPassd { get; set; }
-    internal string Name { get; set; }
-    internal long? attendraceID { get; set; }
+    
     TimeProvider _time = new TimeProvider();
     public virtual TimeProvider Time
     {
@@ -37,51 +46,52 @@ namespace MyDemoSharedGrains
     {
       get
       {
-        return this.GrainFactory.GetGrain<IRaceGrain>(attendraceID.Value);
+        return this.GrainFactory.GetGrain<IRaceGrain>(State.attendraceID.Value);
       }
     }
 
     public async Task AttendInRace(long raceId)
     {
-      attendraceID = raceId;
+      State.attendraceID = raceId;
       await race.joinCarToRace(this.carId);
-
+      base.WriteStateAsync();
     }
 
     public Task<double> GetKMPassed()
     {
-      return Task.FromResult<double>(KMPassd);
+      return Task.FromResult<double>(State.KMPassd);
     }
 
-    public Task Init(string carName)
+    public async Task Init(string carName)
     {
-      KMPassd = 0;
-      CurrentSpeed = 0;
-      LastTimeSpeedReported = null;
-      Name = carName;
-      return Task.CompletedTask;
+      State.KMPassd = 0;
+      State.CurrentSpeed = 0;
+      State.LastTimeSpeedReported = null;
+      State.Name = carName;
+      await base.WriteStateAsync();
+      return;
 
     }
 
     public async Task SetSpeed(double speed)
     {
-      if (LastTimeSpeedReported.HasValue)
+      if (State.LastTimeSpeedReported.HasValue)
       { // only if the car have started all ready
-        KMPassd += Time.Now.Subtract(LastTimeSpeedReported.Value).TotalHours * ((CurrentSpeed + speed) / 2);
+        State.KMPassd += Time.Now.Subtract(State.LastTimeSpeedReported.Value).TotalHours * ((State.CurrentSpeed + speed) / 2);
       }
 
       // set values
-      CurrentSpeed = speed;
-      LastTimeSpeedReported = Time.Now;
+      State.CurrentSpeed = speed;
+      State.LastTimeSpeedReported = Time.Now;
 
 
-      if (attendraceID.HasValue)
+      if (State.attendraceID.HasValue)
       {
 
-        await race.reportCarKMPassed(this.carId, this.KMPassd);
+        await race.reportCarKMPassed(this.carId, State.KMPassd);
 
       }
-
+      base.WriteStateAsync();
     }
   }
 }

@@ -13,10 +13,10 @@ namespace MyDemoSite.Controllers
   {
 
 
-
+    static Random rand = new Random(DateTime.Now.Millisecond);
     public async Task<long> StartNewRace([FromUri] string name, [FromUri] double KM)
     {
-      Random rand = new Random(DateTime.Now.Millisecond);
+   
       long raceId = rand.Next();
       var race = GrainClient.GrainFactory.GetGrain<MyDemoSharedGrainInterfaces.IRaceGrain>(raceId);
       await race.Init(name, KM);
@@ -26,8 +26,8 @@ namespace MyDemoSite.Controllers
 
     public async Task<long> AddCarToRace(string carName, long raceId)
     {
-      Random rand = new Random(DateTime.Now.Millisecond);
-      long carId = rand.Next();
+
+      long carId = carName.GetHashCode();
       var car = GrainClient.GrainFactory.GetGrain<MyDemoSharedGrainInterfaces.ICarGrain>(carId);
       await car.Init(carName);
       await car.AttendInRace(raceId);

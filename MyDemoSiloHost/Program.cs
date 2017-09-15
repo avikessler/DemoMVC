@@ -11,16 +11,18 @@ namespace MyDemoSiloHost
   /// </summary>
   public class Program
   {
+    static SiloHost siloHost;
     static void Main(string[] args)
     {
 
 
       // First, configure and start a local silo
-      var siloConfig = ClusterConfiguration.LocalhostPrimarySilo(22222);
+      siloHost = new SiloHost(System.Net.Dns.GetHostName());
+      // The Cluster config is quirky and weird to configure in code, so we're going to use a config file
+      siloHost.ConfigFileName = "OrleansConfiguration.xml";
 
-      var silo = new SiloHost("TestSilo", siloConfig);
-      silo.InitializeOrleansSilo();
-      silo.StartOrleansSilo();
+      siloHost.InitializeOrleansSilo();
+      siloHost.StartOrleansSilo();
 
       Console.WriteLine("Silo started.");
 
@@ -37,7 +39,7 @@ namespace MyDemoSiloHost
 
       // Shut down
       //client.Close();
-      silo.ShutdownOrleansSilo();
+      siloHost.ShutdownOrleansSilo();
     }
   }
 }

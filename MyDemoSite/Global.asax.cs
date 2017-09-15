@@ -27,7 +27,7 @@ namespace MyDemoSite
     {
       try
       {
-        var clientConfig = ClientConfiguration.LocalhostSilo();
+        var clientConfig = ClientConfiguration.LocalhostSilo(30000);
         GrainClient.Initialize(clientConfig);
       }
       catch (Exception ex)

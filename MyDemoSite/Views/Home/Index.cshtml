@@ -77,11 +77,14 @@
           url: '/api/RaceAPI/StartNewRace?name=' + encodeURIComponent('The best race in the world') + '&KM=' + $('#raceKMInput').val()
         }).done(function (data) {
           raceId = data;
-          return addCars($('#numOfCarsInput').val());
+          return addCars(parseInt($('#numOfCarsInput').val()));
         }).done(function (data) {
 
-          driveIntervalId =setInterval(driveCars, 300);
-           statusIntervalId = setInterval(updateStatus, 300);
+          setTimeout(function () {
+            driveIntervalId = setInterval(driveCars, 300);
+            statusIntervalId = setInterval(updateStatus, 300);
+
+          }, 5000);
 
         });
       });
@@ -121,7 +124,7 @@
           if (!data.raceActive) {
             clearInterval(statusIntervalId);
             clearInterval(driveIntervalId);
-          } 
+          }
         });
       }
 
@@ -130,7 +133,7 @@
 
         if (count <= 0) return;
 
-        var carName = 'Car Num : ' + Math.floor((Math.random() * 100) + 1);
+        var carName = 'Car Num : ' + (count + 1);
         return $.ajax({
           method: 'POST',
           url: '/api/RaceAPI/AddCarToRace?carName=' + encodeURIComponent(carName) + '&raceId=' + raceId
@@ -142,7 +145,7 @@
             carName: carName,
             carKM: 0
           });
-          addCars(count - 1);
+          return addCars(count - 1);
         });
       };
     });

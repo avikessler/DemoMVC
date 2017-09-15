@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<OrleansConfiguration xmlns="urn:orleans">
+ 
+  <Globals>
+    <StorageProviders>
+    <Provider Type="MyDemoSiloHost.MongoStorageProvider"
+          Name="MongoStore"
+          ConnectionString="mongodb://localhost:27017"/>
+  </StorageProviders>
+    <SeedNode Address="localhost" Port="11111" />
+  </Globals>
+  <Defaults>
+    <Networking Address="localhost" Port="11111" />
+    <ProxyingGateway Address="localhost" Port="30000" />
+  </Defaults>
+</OrleansConfiguration>

@@ -1,4 +1,5 @@
 ﻿using Orleans;
+using Orleans.Providers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,12 +8,17 @@ using System.Threading.Tasks;
 
 namespace MyDemoSharedGrains
 {
-  public class RaceGrain : Grain, MyDemoSharedGrainInterfaces.IRaceGrain
+  public class RaceState
+  {
+    public Dictionary<string, CarRaceRecord> Cars { get; set; }
+    public string RaceName { get; set; }
+    public double TotalRaceKM { get; set; }
+  }
+  [StorageProvider(ProviderName = "MongoStore")]
+  public class RaceGrain : Grain<RaceState>, MyDemoSharedGrainInterfaces.IRaceGrain
   {
 
-    internal Dictionary<long, CarRaceRecord> cars { get; set; }
-    internal string RaceName { get; set; }
-    internal double TotalRaceKM { get; set; }
+
 
     TimeProvider _time = new TimeProvider();
     public virtual TimeProvider Time
@@ -26,52 +32,60 @@ namespace MyDemoSharedGrains
     public Task<IEnumerable<KeyValuePair<long, double>>> GetCarsStatus()
     {
       return Task.FromResult<IEnumerable<KeyValuePair<long, double>>>(
-        cars.OrderByDescending(c => c.Value.CarKMPassed).ThenBy(c => c.Value.CarLastKMReported)
+       State.Cars.OrderByDescending(c => c.Value.CarKMPassed).ThenBy(c => c.Value.CarLastKMReported)
         .Select(c => new KeyValuePair<long, double>(c.Value.CarId, c.Value.CarKMPassed)).ToArray()
         );
     }
 
-    public Task Init(string raceName, double TotalKM)
+    public async Task Init(string raceName, double TotalKM)
     {
-      cars = new Dictionary<long, CarRaceRecord>();
-      RaceName = raceName;
-      TotalRaceKM = TotalKM;
-      return Task.CompletedTask;
+
+      State.Cars = new Dictionary<string, CarRaceRecord>();
+      State.RaceName = raceName;
+      State.TotalRaceKM = TotalKM;
+      await base.WriteStateAsync();
+
     }
 
     public Task<bool> IsRaceActive()
     {
-      if (!cars.Any()) throw new InvalidOperationException("Race don't have cars");
+      if (!State.Cars.Any()) throw new InvalidOperationException("Race don't have cars");
 
       return Task.FromResult<bool>(
-        cars.Values.Select(c => c.CarKMPassed).Min() < TotalRaceKM
+         State.Cars.Values.Select(c => c.CarKMPassed).Min() < State.TotalRaceKM
         );
     }
 
-    public Task joinCarToRace(long carId)
+    public async Task joinCarToRace(long carId)
     {
-      cars.Add(carId, new CarRaceRecord
+      State.Cars.Add(carId.ToString(), new CarRaceRecord
       {
         CarId = carId,
         CarKMPassed = 0,
         CarLastKMReported = Time.Now
       });
+      await base.WriteStateAsync();
 
-      return Task.CompletedTask;
     }
 
     public Task<bool> reportCarKMPassed(long carId, double KM)
     {
 
-      if (TotalRaceKM > KM)
+      if (State.TotalRaceKM > KM)
       {
-        cars[carId].CarLastKMReported = DateTime.Now;
-        cars[carId].CarKMPassed = KM;
+        State.Cars[carId.ToString()].CarLastKMReported = Time.Now;
+        State.Cars[carId.ToString()].CarKMPassed = KM;
+        base.WriteStateAsync();
         return Task.FromResult<bool>(true);
       }
       else
       {
-        cars[carId].CarKMPassed = TotalRaceKM;
+        if (State.Cars[carId.ToString()].CarKMPassed != State.TotalRaceKM)
+        {
+          State.Cars[carId.ToString()].CarKMPassed = State.TotalRaceKM;
+          base.WriteStateAsync();
+        }
+
         return Task.FromResult<bool>(false);
       }
 
@@ -79,7 +93,7 @@ namespace MyDemoSharedGrains
     }
   }
 
-  internal class CarRaceRecord
+  public class CarRaceRecord
   {
     public long CarId { get; set; }
     public double CarKMPassed { get; set; }
