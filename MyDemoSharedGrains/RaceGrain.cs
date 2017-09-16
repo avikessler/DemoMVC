@@ -23,7 +23,10 @@ namespace MyDemoSharedGrains
   [Reentrant]
   public class RaceGrain : Grain<RaceState>, MyDemoSharedGrainInterfaces.IRaceGrain
   {
+    public int coint { get { return State.DescendedCarsCount; } }
+
     const int CacheTimemSec = 1000;
+
     private Task gatheringTask = null; // used for the gathering the information from all binded cars, in-order to prevent parallel gathering process in the same time
     private bool testingMode = false;
 
@@ -35,9 +38,18 @@ namespace MyDemoSharedGrains
         return _time;
       }
     }
-
-
-    public async Task<IEnumerable<ICarRaceRecord>> GetCarsStatus()
+    public virtual int MaxCarPerRaceGrain// for mocking purpose 
+    {
+      get
+      {
+        return 10;
+      }
+    }
+    public Task<IEnumerable<ICarRaceRecord>> GetCarsStatus()
+    {
+      return GetCarsStatus(false);
+    }
+    public async Task<IEnumerable<ICarRaceRecord>> GetCarsStatus(bool exludeChildCalc)
     {
       if (Time.Now.Subtract(State.LastGatherTime).TotalMilliseconds > CacheTimemSec) // if there was a request in the cache period then just return the cached version
       {
@@ -51,8 +63,16 @@ namespace MyDemoSharedGrains
         }
 
       }
-      return
-       State.Cars;
+      if (exludeChildCalc) return State.Cars;
+
+      IEnumerable<IEnumerable<ICarRaceRecord>> results = await Task.WhenAll<IEnumerable<ICarRaceRecord>>(
+           State.ChildrensRaces.Select(
+              cr => this.getRaceGrain(cr).GetCarsStatus()  // create task for each child and get it's Status
+              ));
+
+      return State.Cars.Concat(results.SelectMany(i => i)).OrderByDescending(c => c.CarKMPassed).ThenBy(c => c.CarLastKMReported).ToList();
+
+
     }
     private async Task getherCarsStatus()
     {
@@ -64,17 +84,32 @@ namespace MyDemoSharedGrains
 
     private async Task updateCarRecord(CarRaceRecord cr)
     {
-      ICarGrain car = getCarGrain(cr.CarId);
-      cr.CarKMPassed = await car.GetKMPassed();
-      cr.CarLastKMReported = Time.Now;
+      if (cr.CarKMPassed < State.TotalRaceKM)
+      {
+        ICarGrain car = getCarGrain(cr.CarId);
+        double km = await car.GetKMPassed();
+        if (km < State.TotalRaceKM)
+        {
+          cr.CarKMPassed = km;
+          cr.CarLastKMReported = Time.Now;
+        }
+        else
+        {
+          cr.CarKMPassed = State.TotalRaceKM;
+          cr.CarLastKMReported = Time.Now;
+        }
+      }
     }
 
 
     public virtual ICarGrain getCarGrain(long carId) // for mocking purpose 
     {
-      return this.GrainFactory.GetGrain<ICarGrain>(carId); 
+      return this.GrainFactory.GetGrain<ICarGrain>(carId);
     }
-
+    public virtual IRaceGrain getRaceGrain(string raceId) // for mocking purpose 
+    {
+      return this.GrainFactory.GetGrain<IRaceGrain>(raceId);
+    }
 
 
     public async Task Init(string raceName, double TotalKM)
@@ -95,18 +130,56 @@ namespace MyDemoSharedGrains
     public async Task<bool> IsRaceActive()
     {
       if (!State.Cars.Any()) throw new InvalidOperationException("Race don't have cars");
-      await GetCarsStatus();
-      return State.Cars.Select(c => c.CarKMPassed).Min() < State.TotalRaceKM;
+      await GetCarsStatus(true);
+
+    
+
+      IEnumerable<bool> results = await Task.WhenAll<bool>(
+          State.ChildrensRaces.Select(
+             cr => this.getRaceGrain(cr).IsRaceActive()  // create task for each child and get it's Status
+             ));
+      return (State.Cars.Select(c => c.CarKMPassed).Min() < State.TotalRaceKM) || results.Any(b => b);
+
+
     }
 
+
+    public int CalcChildRaceNum(int decendentCarsCount, int maxCarPerRace)
+    {
+      if (decendentCarsCount < maxCarPerRace) return -1;
+      var result = decendentCarsCount;
+      result -= maxCarPerRace;
+      result = result / maxCarPerRace;
+
+      return result % maxCarPerRace;
+
+
+    }
     public async Task joinCarToRace(long carId)
     {
-      State.Cars.Add(new CarRaceRecord
+
+      if (State.DescendedCarsCount < MaxCarPerRaceGrain)
       {
-        CarId = carId,
-        CarKMPassed = 0,
-        CarLastKMReported = Time.Now
-      });
+        State.Cars.Add(new CarRaceRecord
+        {
+          CarId = carId,
+          CarKMPassed = 0,
+          CarLastKMReported = Time.Now
+        });
+      }
+      else
+      {
+        string childRaceID = this.State.RaceName + '.' + this.CalcChildRaceNum(State.DescendedCarsCount, MaxCarPerRaceGrain).ToString();
+        IRaceGrain childRace = getRaceGrain(childRaceID);
+
+        if (!State.ChildrensRaces.Contains(childRaceID))
+        { // if we need to create new child race
+          await childRace.Init(childRaceID, State.TotalRaceKM);
+          State.ChildrensRaces.Add(childRaceID);
+        }
+        await childRace.joinCarToRace(carId); // add the car to the child race to be handled by the child
+      }
+      State.DescendedCarsCount++;
       if (!testingMode) await base.WriteStateAsync();
 
     }
