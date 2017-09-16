@@ -42,7 +42,6 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CarRaceRecord.cs" />
     <Compile Include="ICarGrain.cs" />
     <Compile Include="IRaceGrain.cs" />
     <Compile Include="IUserGrain.cs" />

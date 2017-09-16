@@ -24,7 +24,7 @@ namespace MyDemoSiloHost
     public IMongoCollection<BsonDocument> collection { get; set; }
     public async Task ClearStateAsync(string grainType, GrainReference grainReference, IGrainState grainState)
     {
-      string key = grainReference.GetPrimaryKeyLong() + "." + grainState.State.GetType().Name;
+      string key = grainReference.GetPrimaryKeyString() + "." + grainState.State.GetType().Name;
       FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Eq("key", key);
       await collection.DeleteOneAsync(filter);
 
@@ -48,7 +48,7 @@ namespace MyDemoSiloHost
     {
 
 
-      string key = grainReference.GetPrimaryKeyLong() + "." + grainState.State.GetType().Name;
+      string key = grainReference.GetPrimaryKeyString() + "." + grainState.State.GetType().Name;
       FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Eq("key", key);
       BsonDocument document = await collection.Find(filter).FirstOrDefaultAsync();
       if (document != null) grainState.State = BsonSerializer.Deserialize(document["state"].AsBsonDocument, grainState.State.GetType());
@@ -59,7 +59,7 @@ namespace MyDemoSiloHost
     {
       try
       {
-        string key = grainReference.GetPrimaryKeyLong() + "." + grainState.State.GetType().Name;
+        string key = grainReference.GetPrimaryKeyString() + "." + grainState.State.GetType().Name;
 
         BsonDocument storedData = new BsonDocument
            {

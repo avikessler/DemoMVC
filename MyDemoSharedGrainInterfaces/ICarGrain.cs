@@ -14,7 +14,7 @@ namespace MyDemoSharedGrainInterfaces
     Task SetSpeed(double speed);
     Task<double> GetKMPassed();
 
-    Task AttendInRace(long raceId);
+    Task AttendInRace(string raceId);
   
   }
 }

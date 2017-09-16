@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MyDemoSharedGrainInterfaces
 {
-  public interface IRaceGrain : Orleans.IGrainWithIntegerKey
+  public interface IRaceGrain : Orleans.IGrainWithStringKey
   {
 
 

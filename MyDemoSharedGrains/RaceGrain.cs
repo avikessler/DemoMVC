@@ -14,7 +14,8 @@ namespace MyDemoSharedGrains
   {
     public DateTime LastGatherTime;
     public List<CarRaceRecord> Cars { get; set; }
-    public List<string> childrensRaces { get; set; }
+    public List<string> ChildrensRaces { get; set; }
+    public int DescendedCarsCount { get; set; }
     public string RaceName { get; set; }
     public double TotalRaceKM { get; set; }
   }
@@ -84,6 +85,8 @@ namespace MyDemoSharedGrains
         testingMode = true;
       }
       State.Cars = new List<CarRaceRecord>();
+      State.ChildrensRaces = new List<string>();
+      State.DescendedCarsCount = 0;
       State.RaceName = raceName;
       State.TotalRaceKM = TotalKM;
       if (!testingMode) await base.WriteStateAsync();
@@ -109,6 +112,12 @@ namespace MyDemoSharedGrains
     }
 
 
+  }
+  public class CarRaceRecord : ICarRaceRecord
+  {
+    public long CarId { get; set; }
+    public double CarKMPassed { get; set; }
+    public DateTime CarLastKMReported { get; set; }
   }
 
 }

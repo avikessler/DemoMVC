@@ -17,7 +17,7 @@ namespace MyDemoSharedGrains
     public DateTime? LastTimeSpeedReported { get; set; }
     public double KMPassd { get; set; }
     public string Name { get; set; }
-    public long? attendraceID { get; set; }
+    public string attendraceID { get; set; }
   }
 
   [StorageProvider(ProviderName = "MongoStore")]
@@ -48,11 +48,11 @@ namespace MyDemoSharedGrains
     {
       get
       {
-        return this.GrainFactory.GetGrain<IRaceGrain>(State.attendraceID.Value);
+        return this.GrainFactory.GetGrain<IRaceGrain>(State.attendraceID);
       }
     }
 
-    public async Task AttendInRace(long raceId)
+    public async Task AttendInRace(string raceId)
     {
       State.attendraceID = raceId;
       await race.joinCarToRace(this.carId);

@@ -46,17 +46,17 @@ namespace MyDemoUnitTesting
 
         return cars[id];
         });
-        
-  
 
-      await race.Object.Init("Formula 1", 30);
+
+      string raceName = "Formula 1";
+      await race.Object.Init(raceName, 30);
       car1.SetupGet(c => c.race).Returns(race.Object);
       car2.SetupGet(c => c.race).Returns(race.Object);
       car3.SetupGet(c => c.race).Returns(race.Object);
 
-      await car1.Object.AttendInRace(0);
-      await car2.Object.AttendInRace(0);
-      await car3.Object.AttendInRace(0);
+      await car1.Object.AttendInRace(raceName);
+      await car2.Object.AttendInRace(raceName);
+      await car3.Object.AttendInRace(raceName);
 
       await car1.Object.SetSpeed(300);
       await car2.Object.SetSpeed(200);
