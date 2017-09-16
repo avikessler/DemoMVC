@@ -1,4 +1,5 @@
-﻿using Orleans;
+﻿using MyDemoSharedGrainInterfaces;
+using Orleans;
 using Orleans.Concurrency;
 using Orleans.Providers;
 using System;
@@ -11,7 +12,8 @@ namespace MyDemoSharedGrains
 {
   public class RaceState
   {
-    public Dictionary<string, CarRaceRecord> Cars { get; set; }
+    public DateTime LastGatherTime;
+    public List<CarRaceRecord> Cars { get; set; }
     public string RaceName { get; set; }
     public double TotalRaceKM { get; set; }
   }
@@ -19,8 +21,9 @@ namespace MyDemoSharedGrains
   [Reentrant]
   public class RaceGrain : Grain<RaceState>, MyDemoSharedGrainInterfaces.IRaceGrain
   {
-
-
+    const int CacheTimemSec = 1000;
+    private Task gatheringTask = null; // used for the gathering the information from all binded cars, in-order to prevent parallel gathering process in the same time
+    private bool testingMode = false;
 
     TimeProvider _time = new TimeProvider();
     public virtual TimeProvider Time
@@ -31,71 +34,83 @@ namespace MyDemoSharedGrains
       }
     }
 
-    public Task<IEnumerable<KeyValuePair<long, double>>> GetCarsStatus()
+
+    public async Task<IEnumerable<ICarRaceRecord>> GetCarsStatus()
     {
-      return Task.FromResult<IEnumerable<KeyValuePair<long, double>>>(
-       State.Cars.OrderByDescending(c => c.Value.CarKMPassed).ThenBy(c => c.Value.CarLastKMReported)
-        .Select(c => new KeyValuePair<long, double>(c.Value.CarId, c.Value.CarKMPassed)).ToArray()
-        );
+      if (Time.Now.Subtract(State.LastGatherTime).TotalMilliseconds > CacheTimemSec) // if there was a request in the cache period then just return the cached version
+      {
+
+        if (gatheringTask != null) await gatheringTask; // check if there is already a gathering process running, if so then just return the same answer for the original process.
+        else
+        { // nop this there isn't a process running, the lets create one.
+          gatheringTask = getherCarsStatus();
+          await gatheringTask;
+          gatheringTask = null; // after finish lets clear the task(process) variable .
+        }
+
+      }
+      return
+       State.Cars;
     }
+    private async Task getherCarsStatus()
+    {
+      await Task.WhenAll(State.Cars.Select(cr => updateCarRecord(cr)));
+      State.Cars = State.Cars.OrderByDescending(c => c.CarKMPassed).ThenBy(c => c.CarLastKMReported).ToList();
+      State.LastGatherTime = Time.Now;
+      if (!testingMode) await base.WriteStateAsync();
+    }
+
+    private async Task updateCarRecord(CarRaceRecord cr)
+    {
+      ICarGrain car = getCarGrain(cr.CarId);
+      cr.CarKMPassed = await car.GetKMPassed();
+      cr.CarLastKMReported = Time.Now;
+    }
+
+
+    public virtual ICarGrain getCarGrain(long carId) // for mocking purpose 
+    {
+      return this.GrainFactory.GetGrain<ICarGrain>(carId); 
+    }
+
+
 
     public async Task Init(string raceName, double TotalKM)
     {
-
-      State.Cars = new Dictionary<string, CarRaceRecord>();
+      if (State == null)
+      {
+        State = new RaceState();  // in case we are int testing mode
+        testingMode = true;
+      }
+      State.Cars = new List<CarRaceRecord>();
       State.RaceName = raceName;
       State.TotalRaceKM = TotalKM;
-      await base.WriteStateAsync();
-
+      if (!testingMode) await base.WriteStateAsync();
     }
 
-    public Task<bool> IsRaceActive()
+    public async Task<bool> IsRaceActive()
     {
       if (!State.Cars.Any()) throw new InvalidOperationException("Race don't have cars");
-
-      return Task.FromResult<bool>(
-         State.Cars.Values.Select(c => c.CarKMPassed).Min() < State.TotalRaceKM
-        );
+      await GetCarsStatus();
+      return State.Cars.Select(c => c.CarKMPassed).Min() < State.TotalRaceKM;
     }
 
     public async Task joinCarToRace(long carId)
     {
-      State.Cars.Add(carId.ToString(), new CarRaceRecord
+      State.Cars.Add(new CarRaceRecord
       {
         CarId = carId,
         CarKMPassed = 0,
         CarLastKMReported = Time.Now
       });
-      await base.WriteStateAsync();
+      if (!testingMode) await base.WriteStateAsync();
 
     }
 
-    public Task<bool> reportCarKMPassed(long carId, double KM)
-    {
 
-      if (State.TotalRaceKM > KM)
-      {
-        State.Cars[carId.ToString()].CarLastKMReported = Time.Now;
-        State.Cars[carId.ToString()].CarKMPassed = KM;
-        base.WriteStateAsync();
-        return Task.FromResult<bool>(true);
-      }
-      else
-      {
-        if (State.Cars[carId.ToString()].CarKMPassed != State.TotalRaceKM)
-        {
-          State.Cars[carId.ToString()].CarKMPassed = State.TotalRaceKM;
-          base.WriteStateAsync();
-        }
-
-        return Task.FromResult<bool>(false);
-      }
-
-
-    }
   }
 
-  public class CarRaceRecord
+  public class CarRaceRecord : ICarRaceRecord
   {
     public long CarId { get; set; }
     public double CarKMPassed { get; set; }

@@ -14,10 +14,17 @@ namespace MyDemoSharedGrainInterfaces
     Task Init(string raceName, double TotalKM);
     Task joinCarToRace(long carId);
 
-    Task<bool> reportCarKMPassed(long carId, double KM);
-
-    Task<IEnumerable<KeyValuePair<long, double>>> GetCarsStatus();
+    Task<IEnumerable<ICarRaceRecord>> GetCarsStatus();
 
     Task<bool> IsRaceActive();
+
+
+
+  }
+  public interface ICarRaceRecord
+  {
+    long CarId { get; set; }
+    double CarKMPassed { get; set; }
+    DateTime CarLastKMReported { get; set; }
   }
 }

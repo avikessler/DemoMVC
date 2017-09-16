@@ -25,7 +25,7 @@ namespace MyDemoSharedGrains
   public class CarGrain : Grain<CarState>, ICarGrain
   {
 
-    
+    private bool testingMode = false;
     TimeProvider _time = new TimeProvider();
     public virtual TimeProvider Time
     {
@@ -56,7 +56,7 @@ namespace MyDemoSharedGrains
     {
       State.attendraceID = raceId;
       await race.joinCarToRace(this.carId);
-      base.WriteStateAsync();
+      if (!testingMode) await base.WriteStateAsync();
     }
 
     public Task<double> GetKMPassed()
@@ -66,16 +66,22 @@ namespace MyDemoSharedGrains
 
     public async Task Init(string carName)
     {
+      if (State == null)
+      {
+        State = new CarState(); // in case we are int testing mode
+        testingMode = true;
+      }
       State.KMPassd = 0;
       State.CurrentSpeed = 0;
       State.LastTimeSpeedReported = null;
       State.Name = carName;
-      await base.WriteStateAsync();
+
+      if (!testingMode) await base.WriteStateAsync();
       return;
 
     }
 
-    public async Task SetSpeed(double speed)
+    public Task SetSpeed(double speed)
     {
       if (State.LastTimeSpeedReported.HasValue)
       { // only if the car have started all ready
@@ -87,13 +93,10 @@ namespace MyDemoSharedGrains
       State.LastTimeSpeedReported = Time.Now;
 
 
-      if (State.attendraceID.HasValue)
-      {
 
-        await race.reportCarKMPassed(this.carId, State.KMPassd);
+      if (!testingMode) base.WriteStateAsync();
 
-      }
-      base.WriteStateAsync();
+      return Task.CompletedTask;
     }
   }
 }

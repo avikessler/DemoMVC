@@ -4,7 +4,7 @@ using MyDemoSharedGrains;
 using Moq;
 using System.Linq;
 using System.Threading.Tasks;
-
+using System.Collections.Generic;
 namespace MyDemoUnitTesting
 {
   [TestClass]
@@ -13,6 +13,8 @@ namespace MyDemoUnitTesting
     [TestMethod]
     public async Task RaceTest()
     {
+ 
+      Dictionary<long,CarGrain> cars = new Dictionary<long,CarGrain>();
 
       Mock<TimeProvider> time = new Mock<TimeProvider>();
       DateTime newTime = DateTime.Now;
@@ -21,23 +23,31 @@ namespace MyDemoUnitTesting
       Mock<CarGrain> car1 = new Moq.Mock<CarGrain>(Moq.MockBehavior.Loose);
       car1.SetupGet(c => c.carId).Returns(1);
       car1.SetupGet(c => c.Time).Returns(time.Object);
+      cars.Add(1, car1.Object);
       await car1.Object.Init("speedy gonzales");
 
 
       Mock<CarGrain> car2 = new Moq.Mock<CarGrain>(Moq.MockBehavior.Loose);
       car2.SetupGet(c => c.carId).Returns(2);
       car2.SetupGet(c => c.Time).Returns(time.Object);
+      cars.Add(2, car2.Object);
       await car2.Object.Init("Bimba");
 
       Mock<CarGrain> car3 = new Moq.Mock<CarGrain>(Moq.MockBehavior.Loose);
       car3.SetupGet(c => c.carId).Returns(3);
       car3.SetupGet(c => c.Time).Returns(time.Object);
+      cars.Add(3, car3.Object);
       await car3.Object.Init("speed racer");
 
 
       Mock<RaceGrain> race = new Moq.Mock<RaceGrain>(Moq.MockBehavior.Loose);
       race.Setup(r => r.Time).Returns(time.Object);
+      race.Setup(r => r.getCarGrain(It.IsAny<long>())).Returns<long>(id => {
 
+        return cars[id];
+        });
+        
+  
 
       await race.Object.Init("Formula 1", 30);
       car1.SetupGet(c => c.race).Returns(race.Object);
@@ -95,7 +105,7 @@ namespace MyDemoUnitTesting
 
       Assert.IsFalse(await race.Object.IsRaceActive(), "check if the race is not active");
 
-      Assert.AreEqual<long>((await race.Object.GetCarsStatus()).ElementAt(0).Key, 1, "the first car should win");
+      Assert.AreEqual<long>((await race.Object.GetCarsStatus()).ElementAt(0).CarId , 1, "the first car should win");
 
 
     }
