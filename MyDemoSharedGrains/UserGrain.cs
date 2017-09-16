@@ -8,6 +8,7 @@ namespace MyDemoSharedGrains
   /// <summary>
   /// Grain implementation class Grain1.
   /// </summary>
+ 
   public class UserGrain : Grain, IUserGrain
   {
 

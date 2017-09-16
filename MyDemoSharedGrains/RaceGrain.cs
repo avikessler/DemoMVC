@@ -1,4 +1,5 @@
 ﻿using Orleans;
+using Orleans.Concurrency;
 using Orleans.Providers;
 using System;
 using System.Collections.Generic;
@@ -15,6 +16,7 @@ namespace MyDemoSharedGrains
     public double TotalRaceKM { get; set; }
   }
   [StorageProvider(ProviderName = "MongoStore")]
+  [Reentrant]
   public class RaceGrain : Grain<RaceState>, MyDemoSharedGrainInterfaces.IRaceGrain
   {
 

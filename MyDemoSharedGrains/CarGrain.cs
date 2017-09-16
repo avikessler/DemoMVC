@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MyDemoSharedGrainInterfaces;
 using Orleans.Providers;
+using Orleans.Concurrency;
 
 namespace MyDemoSharedGrains
 {
@@ -20,6 +21,7 @@ namespace MyDemoSharedGrains
   }
 
   [StorageProvider(ProviderName = "MongoStore")]
+  [Reentrant]
   public class CarGrain : Grain<CarState>, ICarGrain
   {
 
