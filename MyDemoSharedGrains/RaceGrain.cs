@@ -14,6 +14,7 @@ namespace MyDemoSharedGrains
   {
     public DateTime LastGatherTime;
     public List<CarRaceRecord> Cars { get; set; }
+    public List<string> childrensRaces { get; set; }
     public string RaceName { get; set; }
     public double TotalRaceKM { get; set; }
   }
@@ -110,10 +111,4 @@ namespace MyDemoSharedGrains
 
   }
 
-  public class CarRaceRecord : ICarRaceRecord
-  {
-    public long CarId { get; set; }
-    public double CarKMPassed { get; set; }
-    public DateTime CarLastKMReported { get; set; }
-  }
 }

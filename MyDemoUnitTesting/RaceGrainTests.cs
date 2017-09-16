@@ -54,8 +54,6 @@ namespace MyDemoUnitTesting
       car2.SetupGet(c => c.race).Returns(race.Object);
       car3.SetupGet(c => c.race).Returns(race.Object);
 
-
-
       await car1.Object.AttendInRace(0);
       await car2.Object.AttendInRace(0);
       await car3.Object.AttendInRace(0);

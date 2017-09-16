@@ -113,8 +113,8 @@
           for (var j = 0; j < data.carStatuses.length; j++) {
 
             for (var i = 0; i < cars.length; i++) {
-              if (cars[i].carId === data.carStatuses[j].Key) {
-                cars[i].carKM = data.carStatuses[j].Value;
+              if (cars[i].carId === data.carStatuses[j].CarId) {
+                cars[i].carKM = data.carStatuses[j].CarKMPassed;
                 tdata.append('<tr class="' + (cars[i].carKM == $('#raceKMInput').val() ? 'success' : '') + '"><td>' + (j + 1) + '</td><td>' + cars[i].carName + '</td><td>' + cars[i].carKM + '</td></tr>');
                 break;
               }

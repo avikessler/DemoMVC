@@ -293,6 +293,10 @@
       <Project>{c6b8efe3-6f85-42c0-a0d0-2e6fda37c43e}</Project>
       <Name>MyDemoSharedGrainInterfaces</Name>
     </ProjectReference>
+    <ProjectReference Include="..\MyDemoSharedGrains\MyDemoSharedGrains.csproj">
+      <Project>{5c2389be-0a90-41c1-a4b6-24a6bca1ef20}</Project>
+      <Name>MyDemoSharedGrains</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

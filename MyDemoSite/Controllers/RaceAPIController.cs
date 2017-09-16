@@ -16,7 +16,7 @@ namespace MyDemoSite.Controllers
     static Random rand = new Random(DateTime.Now.Millisecond);
     public async Task<long> StartNewRace([FromUri] string name, [FromUri] double KM)
     {
-   
+
       long raceId = rand.Next();
       var race = GrainClient.GrainFactory.GetGrain<MyDemoSharedGrainInterfaces.IRaceGrain>(raceId);
       await race.Init(name, KM);
@@ -49,19 +49,27 @@ namespace MyDemoSite.Controllers
 
     public async Task<Object> RaceStatus(long raceId)
     {
-
-      var race = GrainClient.GrainFactory.GetGrain<MyDemoSharedGrainInterfaces.IRaceGrain>(raceId);
-
-      bool active = await race.IsRaceActive();
-      var carStatuses = await race.GetCarsStatus();
-      var result = new
+      try
       {
-        raceActive = active,
-        carStatuses = carStatuses
+        var race = GrainClient.GrainFactory.GetGrain<MyDemoSharedGrainInterfaces.IRaceGrain>(raceId);
 
-      };
+        bool active = await race.IsRaceActive();
+        var carStatuses = await race.GetCarsStatus();
+        var result = new
+        {
+          raceActive = active,
+          carStatuses = carStatuses
 
-      return result;
+        };
+        return result;
+      }
+      catch (Exception  ex)
+      {
+
+        throw;
+      }
+
+    
     }
 
   }
