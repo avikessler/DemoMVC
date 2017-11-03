@@ -34,7 +34,7 @@ namespace MyDemoSite
       {
         if (reccount > 0)
         {
-          System.Threading.Thread.Sleep(1000);
+          System.Threading.Thread.Sleep(3000);
           initClientSilo(reccount - 1);
         }
         else throw;

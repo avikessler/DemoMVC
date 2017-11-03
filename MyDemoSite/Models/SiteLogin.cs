@@ -7,6 +7,10 @@ namespace MyDemoSite.Models
 {
   public class SiteLoginResponse
   {
+    public string UID { get; set; }
+    public string UIDSignature { get; set; }
+    public string timestamp { get; set; }
+
     public string email { get; set; }
 
     public string password { get; set; }

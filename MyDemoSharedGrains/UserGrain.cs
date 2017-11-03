@@ -8,9 +8,11 @@ namespace MyDemoSharedGrains
   /// <summary>
   /// Grain implementation class Grain1.
   /// </summary>
- 
+
   public class UserGrain : Grain, IUserGrain
   {
+    const string apiKey = "3_bAhbYj1OR-lgWnHrKRV8MTyed5e5u0VlS2JQccV2tbyTuEGpnHrv8JFGDQtTenvO";
+    const string secretKey = "enCkcj7mBc4fhcJ5Nb0RLHv2ppbqIY8B1E6XlaB0f5M=";
 
     public virtual string Email
     {
@@ -24,8 +26,6 @@ namespace MyDemoSharedGrains
     private GSRequest getGigyaRequest(string method)
     {
       // Define the API-Key and Secret key (the keys can be obtained from your site setup page on Gigya's website).
-      const string apiKey = "3_bAhbYj1OR-lgWnHrKRV8MTyed5e5u0VlS2JQccV2tbyTuEGpnHrv8JFGDQtTenvO";
-      const string secretKey = "enCkcj7mBc4fhcJ5Nb0RLHv2ppbqIY8B1E6XlaB0f5M=";
 
       GSRequest request = new GSRequest(apiKey, secretKey, method, false);
       request.APIDomain = "eu1.gigya.com";
@@ -46,20 +46,14 @@ namespace MyDemoSharedGrains
       // Step 3 - Sending the request
       GSResponse response = await Task<GSResponse>.Factory.FromAsync(request.BeginSend, request.EndSend, TaskCreationOptions.None);
 
+      return (response.GetErrorCode() == 0);
+    }
 
-      // Step 4 - handling the request's response.
-      if (response.GetErrorCode() == 0)
-      {    // SUCCESS! response status = OK  
-        return true;
-      }
-      else
-      {  // Error
+    public Task<bool> ValidateUIDSignature(string UID, string timestamp, string signature)
+    {
+      int iTimeStamp = (int)(System.DateTime.Parse(timestamp).Subtract(new System.DateTime(1970, 1, 1))).TotalSeconds;
 
-        //    Console.WriteLine("Got error on setStatus: {0}", response.GetLog());
-        //  return Task.FromResult<bool>(false);
-        return (Email == "avi.kessler@gmail.com" && password == "1");
-      }
-
+      return Task.FromResult<bool>(SigUtils.ValidateUserSignature(UID, iTimeStamp.ToString(), secretKey, signature));
     }
 
     public async Task<bool> Register(string password)
@@ -73,10 +67,10 @@ namespace MyDemoSharedGrains
 
       string regToken = initResponse.GetString("regToken", null);
 
-      GSRequest regRequest = getGigyaRequest("ccounts.register");
+      GSRequest regRequest = getGigyaRequest("accounts.register");
 
       // Step 2 - Adding parameters
-      regRequest.SetParam("username", Email);
+      //regRequest.SetParam("username", Email);
       regRequest.SetParam("email", Email);  // set the "uid" parameter to user's ID
       regRequest.SetParam("password", password);
       regRequest.SetParam("regToken", regToken);

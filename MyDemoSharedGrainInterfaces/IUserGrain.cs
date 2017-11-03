@@ -8,10 +8,11 @@ namespace MyDemoSharedGrainInterfaces
   /// </summary>
   public interface IUserGrain : IGrainWithStringKey
   {
-   
 
-    Task<bool> Login( string password);
 
+    Task<bool> Login(string password);
+
+    Task<bool> ValidateUIDSignature(string UID, string timestamp, string signature);
 
   }
 }

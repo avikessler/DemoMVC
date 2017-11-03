@@ -20,11 +20,12 @@ namespace MyDemoSite.Controllers
 
 
     [HttpGet]
-    public ActionResult Welcome()
+    public ActionResult Welcome(string UID, string UIDSig, string timestamp)
     {
 
+      // UID, UIDSig, timestamp, loginProvider, loginProviderUID, nickname, photoURL, thumbnailURL, firstName, lastName, gender, birthDay, birthMonth, birthYear, email, country, state, city, zip, profileURL
 
-   //TODO not working as the gigya account is disabled :(
+      //TODO not working as the gigya account is disabled :(
 
       return View();
 
@@ -40,11 +41,12 @@ namespace MyDemoSite.Controllers
     [ActionName("Index")]
     public async Task<ActionResult> IndexPost(Models.SiteLoginResponse res)
     {
-      
-      var userBL = GrainClient.GrainFactory.GetGrain<MyDemoSharedGrainInterfaces.IUserGrain>(res.email);
-    
 
-      if (await userBL.Login(res.password))
+      var userBL = GrainClient.GrainFactory.GetGrain<MyDemoSharedGrainInterfaces.IUserGrain>(res.email);
+
+      bool result = await userBL.ValidateUIDSignature(res.UID , res.timestamp, res.UIDSignature);
+      if (result)
+      // if (await userBL.Login(res.password))
       {
         Response.SetCookie(new HttpCookie("user", res.email));
         return RedirectToAction("Index", "Home");

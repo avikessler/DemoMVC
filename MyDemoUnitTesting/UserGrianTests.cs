@@ -30,8 +30,9 @@ namespace MyDemoUnitTesting
     public async Task RegisterTest()
     {
       Mock<UserGrain> user = new Moq.Mock<UserGrain>(Moq.MockBehavior.Loose);
-      user.SetupGet(u => u.Email).Returns("avi.kessler@gmail.com");
-      Assert.IsTrue(await user.Object.Register("1"));
+      Guid g = Guid.NewGuid();
+      user.SetupGet(u => u.Email).Returns($"avi.kessler+{g.ToString("N")}@gmail.com");
+      Assert.IsTrue(await user.Object.Register(g.ToString("N")));
 
     }
 
