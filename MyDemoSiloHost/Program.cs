@@ -3,7 +3,7 @@ using System;
 using Orleans;
 using Orleans.Runtime.Configuration;
 using Orleans.Runtime.Host;
-
+using Metrics;
 namespace MyDemoSiloHost
 {
   /// <summary>
@@ -23,6 +23,12 @@ namespace MyDemoSiloHost
 
       siloHost.InitializeOrleansSilo();
       siloHost.StartOrleansSilo();
+
+     
+
+      Metric.Config
+          .WithHttpEndpoint("http://localhost:8000/")
+          .WithAllCounters();
 
       Console.WriteLine("Silo started.");
 

@@ -11,8 +11,8 @@ namespace MyDemoSharedGrainInterfaces
 
 
 
-    Task Init(string raceName, double TotalKM);
-    Task joinCarToRace(long carId);
+    Task Init(string raceName, double TotalKM , string parentRaceName = "");
+    Task JoinCarToRace(long carId);
 
     Task<IEnumerable<ICarRaceRecord>> GetCarsStatus();
 

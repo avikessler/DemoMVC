@@ -7,10 +7,12 @@ using System.Threading.Tasks;
 using MyDemoSharedGrainInterfaces;
 using Orleans.Providers;
 using Orleans.Concurrency;
+using Metrics;
 
 namespace MyDemoSharedGrains
 {
 
+ 
   public class CarState
   {
     public double CurrentSpeed { get; set; }
@@ -24,6 +26,9 @@ namespace MyDemoSharedGrains
   [Reentrant]
   public class CarGrain : Grain<CarState>, ICarGrain
   {
+
+    private readonly Meter speedReportMeter =
+      Metric.Meter("CarSpeedReportMeter", Unit.Requests, TimeUnit.Seconds);
 
     private bool testingMode = false;
     TimeProvider _time = new TimeProvider();
@@ -55,7 +60,7 @@ namespace MyDemoSharedGrains
     public async Task AttendInRace(string raceId)
     {
       State.attendraceID = raceId;
-      await race.joinCarToRace(this.carId);
+      await race.JoinCarToRace(this.carId);
       if (!testingMode) await base.WriteStateAsync();
     }
 
@@ -95,7 +100,7 @@ namespace MyDemoSharedGrains
 
 
       if (!testingMode) base.WriteStateAsync();
-
+      speedReportMeter.Mark();
       return Task.CompletedTask;
     }
   }

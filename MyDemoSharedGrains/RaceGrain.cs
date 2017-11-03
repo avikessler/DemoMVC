@@ -1,4 +1,5 @@
-﻿using MyDemoSharedGrainInterfaces;
+﻿using Metrics;
+using MyDemoSharedGrainInterfaces;
 using Orleans;
 using Orleans.Concurrency;
 using Orleans.Providers;
@@ -17,13 +18,18 @@ namespace MyDemoSharedGrains
     public List<string> ChildrensRaces { get; set; }
     public int DescendedCarsCount { get; set; }
     public string RaceName { get; set; }
+    public string ParentRaceName { get; set; }
     public double TotalRaceKM { get; set; }
   }
   [StorageProvider(ProviderName = "MongoStore")]
   [Reentrant]
   public class RaceGrain : Grain<RaceState>, MyDemoSharedGrainInterfaces.IRaceGrain
   {
-    public int coint { get { return State.DescendedCarsCount; } }
+
+    private static readonly Counter carCounter = Metric.Counter("CarsInRaceCount", Unit.Items);
+    private static readonly Counter raceNodesCounter = Metric.Counter("RaceNodeCount", Unit.Items);
+    private readonly Timer raceStatusTimer = Metric.Timer("RaceStatusTimer", Unit.Requests);
+    public int Count { get { return State.DescendedCarsCount; } }
 
     const int CacheTimemSec = 1000;
 
@@ -51,28 +57,31 @@ namespace MyDemoSharedGrains
     }
     public async Task<IEnumerable<ICarRaceRecord>> GetCarsStatus(bool exludeChildCalc)
     {
-      if (Time.Now.Subtract(State.LastGatherTime).TotalMilliseconds > CacheTimemSec) // if there was a request in the cache period then just return the cached version
+      using (var context = raceStatusTimer.NewContext(State.RaceName))
       {
+       
+        if (Time.Now.Subtract(State.LastGatherTime).TotalMilliseconds > CacheTimemSec) // if there was a request in the cache period then just return the cached version
+        {
 
-        if (gatheringTask != null) await gatheringTask; // check if there is already a gathering process running, if so then just return the same answer for the original process.
-        else
-        { // nop this there isn't a process running, the lets create one.
-          gatheringTask = getherCarsStatus();
-          await gatheringTask;
-          gatheringTask = null; // after finish lets clear the task(process) variable .
+          if (gatheringTask != null) await gatheringTask; // check if there is already a gathering process running, if so then just return the same answer for the original process.
+          else
+          { // nop this there isn't a process running, the lets create one.
+            gatheringTask = getherCarsStatus();
+            await gatheringTask;
+            gatheringTask = null; // after finish lets clear the task(process) variable .
+          }
+
         }
+        if (exludeChildCalc) return State.Cars;
 
+        IEnumerable<IEnumerable<ICarRaceRecord>> results = await Task.WhenAll<IEnumerable<ICarRaceRecord>>(
+             State.ChildrensRaces.Select(
+                cr => this.getRaceGrain(cr).GetCarsStatus()  // create task for each child and get it's Status
+                ));
+
+        return State.Cars.Concat(results.SelectMany(i => i)).OrderByDescending(c => c.CarKMPassed).ThenBy(c => c.CarLastKMReported).ToList();
+        
       }
-      if (exludeChildCalc) return State.Cars;
-
-      IEnumerable<IEnumerable<ICarRaceRecord>> results = await Task.WhenAll<IEnumerable<ICarRaceRecord>>(
-           State.ChildrensRaces.Select(
-              cr => this.getRaceGrain(cr).GetCarsStatus()  // create task for each child and get it's Status
-              ));
-
-      return State.Cars.Concat(results.SelectMany(i => i)).OrderByDescending(c => c.CarKMPassed).ThenBy(c => c.CarLastKMReported).ToList();
-
-
     }
     private async Task getherCarsStatus()
     {
@@ -112,7 +121,7 @@ namespace MyDemoSharedGrains
     }
 
 
-    public async Task Init(string raceName, double TotalKM)
+    public async Task Init(string raceName, double TotalKM, string parentRaceName = null)
     {
       if (State == null)
       {
@@ -124,7 +133,9 @@ namespace MyDemoSharedGrains
       State.DescendedCarsCount = 0;
       State.RaceName = raceName;
       State.TotalRaceKM = TotalKM;
+      State.ParentRaceName = parentRaceName;
       if (!testingMode) await base.WriteStateAsync();
+      raceNodesCounter.Increment();
     }
 
     public async Task<bool> IsRaceActive()
@@ -132,7 +143,7 @@ namespace MyDemoSharedGrains
       if (!State.Cars.Any()) throw new InvalidOperationException("Race don't have cars");
       await GetCarsStatus(true);
 
-    
+
 
       IEnumerable<bool> results = await Task.WhenAll<bool>(
           State.ChildrensRaces.Select(
@@ -155,17 +166,19 @@ namespace MyDemoSharedGrains
 
 
     }
-    public async Task joinCarToRace(long carId)
+    public async Task JoinCarToRace(long carId)
     {
 
       if (State.DescendedCarsCount < MaxCarPerRaceGrain)
       {
+
         State.Cars.Add(new CarRaceRecord
         {
           CarId = carId,
           CarKMPassed = 0,
           CarLastKMReported = Time.Now
         });
+        carCounter.Increment();
       }
       else
       {
@@ -174,10 +187,10 @@ namespace MyDemoSharedGrains
 
         if (!State.ChildrensRaces.Contains(childRaceID))
         { // if we need to create new child race
-          await childRace.Init(childRaceID, State.TotalRaceKM);
+          await childRace.Init(childRaceID, State.TotalRaceKM, State.RaceName);
           State.ChildrensRaces.Add(childRaceID);
         }
-        await childRace.joinCarToRace(carId); // add the car to the child race to be handled by the child
+        await childRace.JoinCarToRace(carId); // add the car to the child race to be handled by the child
       }
       State.DescendedCarsCount++;
       if (!testingMode) await base.WriteStateAsync();
